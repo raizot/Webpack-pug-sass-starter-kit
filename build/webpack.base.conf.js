@@ -1,16 +1,19 @@
-const path = require('path')
-const fs = require('fs')
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { VueLoaderPlugin } = require('vue-loader')
+const path = require('path');
+const webpack = require('webpack');
+// const fs = require('fs');
+// const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const {
+  VueLoaderPlugin
+} = require('vue-loader');
 
 const PATHS = {
   src: path.join(__dirname, '../src'),
   dist: path.join(__dirname, '../dist'),
   assets: 'assets/'
-}
+};
 
 module.exports = {
 
@@ -18,13 +21,12 @@ module.exports = {
     paths: PATHS
   },
   entry: {
-    app: PATHS.src,
+    "ui-kit": `${PATHS.src}/pages/ui-kit/ui-kit.js`,
 
   },
   output: {
-    filename: `${PATHS.assets}js/[name].[hash].js`,
-    path: PATHS.dist,
-    publicPath: '/'
+    filename: `${PATHS.assets}js/[name].js`,
+    path: PATHS.dist
   },
   optimization: {
     splitChunks: {
@@ -41,14 +43,18 @@ module.exports = {
   module: {
     rules: [{
       test: /\.pug$/,
-      oneOf: [
-        {
+      oneOf: [{
           resourceQuery: /^\?vue/,
           use: ['pug-plain-loader']
         },
 
         {
-          use: ['pug-loader']
+          use: {
+            loader: 'pug-loader',
+            options: {
+              pretty: true
+            }
+          }
         }
       ]
     }, {
@@ -66,29 +72,49 @@ module.exports = {
     }, {
       test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
       loader: 'file-loader',
+      exclude: /(img)/,
       options: {
-        name: '[name].[ext]'
+        name: '[name].[ext]',
+        outputPath: 'assets/fonts',
+        publicPath: '../assets/fonts/'
       }
     }, {
       test: /\.(png|jpg|gif|svg)$/,
       loader: 'file-loader',
+      exclude: /(fonts)/,
       options: {
-        name: '[name].[ext]'
+        name: '[name].[ext]',
+        outputPath: 'assets/img',
+        publicPath: '../assets/img/'
       }
     }, {
       test: /\.scss$/,
       use: [
         'style-loader',
-        MiniCssExtractPlugin.loader,
+        {
+          loader: MiniCssExtractPlugin.loader,
+          options: {
+            publicPath: '/'
+          }
+        },
         {
           loader: 'css-loader',
-          options: { sourceMap: true }
+          options: {
+            sourceMap: true
+          }
         }, {
           loader: 'postcss-loader',
-          options: { sourceMap: true, config: { path: `./postcss.config.js` } }
+          options: {
+            sourceMap: true,
+            config: {
+              path: `./postcss.config.js`
+            }
+          }
         }, {
           loader: 'sass-loader',
-          options: { sourceMap: true }
+          options: {
+            sourceMap: true
+          }
         }
       ]
     }, {
@@ -98,10 +124,17 @@ module.exports = {
         MiniCssExtractPlugin.loader,
         {
           loader: 'css-loader',
-          options: { sourceMap: true }
+          options: {
+            sourceMap: true
+          }
         }, {
           loader: 'postcss-loader',
-          options: { sourceMap: true, config: { path: `./postcss.config.js` } }
+          options: {
+            sourceMap: true,
+            config: {
+              path: `./postcss.config.js`
+            }
+          }
         }
       ]
     }]
@@ -113,28 +146,32 @@ module.exports = {
     }
   },
   plugins: [
-    new CleanWebpackPlugin(),
+    // new CleanWebpackPlugin(),
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery'
+    }),
     new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
-      filename: `${PATHS.assets}css/[name].[hash].css`,
+      filename: 'css/[name].css',
     }),
-    new CopyWebpackPlugin([
-      { from: `${PATHS.src}/${PATHS.assets}img`, to: `${PATHS.assets}img` },
-      { from: `${PATHS.src}/${PATHS.assets}fonts`, to: `${PATHS.assets}fonts` },
-      { from: `${PATHS.src}/static`, to: '' },
-    ]),
+    new CopyWebpackPlugin([{
+      from: `${PATHS.src}/static`,
+      to: ''
+    }, ]),
 
-     new HtmlWebpackPlugin({
-       template: './src/pages/ui-kit/ui-kit.pug',
-       filename: 'ui-kit.html',
-       inject: true,
-       collapseWhitespace: false
-     }),
-      new HtmlWebpackPlugin({
-        template: './src/pages/home/home.pug',
-        filename: 'home.html',
-        inject: true,
-        collapseWhitespace: false
-      }),
+    new HtmlWebpackPlugin({
+      template: './src/pages/ui-kit/ui-kit.pug',
+      filename: 'ui-kit.html',
+      inject: true,
+      collapseWhitespace: true,
+
+    }),
+    // new HtmlWebpackPlugin({
+    //   template: './src/pages/form-elements/form-elements.pug',
+    //   filename: 'home.html',
+    //   inject: true,
+    //   collapseWhitespace: false
+    // }),
   ],
 }
